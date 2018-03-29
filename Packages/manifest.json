@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "com.unity.modules.vr": "exclude",
+    "com.unity.modules.xr": "exclude",
+    "com.unity.package-manager-ui": "1.8.1",
+    "com.unity.ads": "2.0.4",
+    "com.unity.textmeshpro": "1.2.1"
+  }
+}
