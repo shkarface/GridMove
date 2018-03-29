@@ -72,7 +72,6 @@ public class GridHolder : MonoBehaviour
         {
             for (int y = GridSize.y - 1; y > 0; y--)
             {
-
                 for (int j = y - 1; j >= 0; j--)
                 {
                     if (Grid[x, j] == 0)
@@ -268,52 +267,56 @@ public class GridHolder : MonoBehaviour
         }
         else
         {
-            if (!Move(Direction.None, true))
-                OnLost?.Invoke();
+            IsGameLost();
         }
     }
-    public bool Move(Direction direction, bool justCheck = false)
+    public bool Move(Direction direction)
     {
         bool didMove = false;
-        if (!justCheck)
-        {
-            switch (direction)
-            {
-                case Direction.Down:
-                    didMove = MoveDown(justCheck);
-                    break;
-                case Direction.Up:
-                    didMove = MoveUp(justCheck);
-                    break;
-                case Direction.Right:
-                    didMove = MoveRight(justCheck);
-                    break;
-                case Direction.Left:
-                    didMove = MoveLeft(justCheck);
-                    break;
-            }
 
+        switch (direction)
+        {
+            case Direction.Down:
+                didMove = MoveDown();
+                break;
+            case Direction.Up:
+                didMove = MoveUp();
+                break;
+            case Direction.Right:
+                didMove = MoveRight();
+                break;
+            case Direction.Left:
+                didMove = MoveLeft();
+                break;
+        }
+
+        if (!IsGameLost())
             if (didMove)
                 AddRandom(1, 3);
 
-            return didMove;
-        }
-        else
+        return didMove;
+
+    }
+    public bool IsGameLost()
+    {
+        bool didMove = AnyEmptyCells();
+        if (!didMove)
         {
             didMove = MoveDown(true);
             if (!didMove)
             {
-                didMove = MoveDown(true);
+                didMove = MoveUp(true);
                 if (!didMove)
                 {
-                    didMove = MoveDown(true);
+                    didMove = MoveLeft(true);
                     if (!didMove)
-                        didMove = MoveDown(true);
+                        didMove = MoveRight(true);
                 }
             }
-
-            return didMove;
         }
+        if (!didMove)
+            OnLost?.Invoke();
+        return !didMove;
     }
     public bool AnyEmptyCells()
     {
