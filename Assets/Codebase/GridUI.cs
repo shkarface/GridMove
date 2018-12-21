@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(GridLayoutGroup))]
@@ -14,8 +11,12 @@ public class GridUI : MonoBehaviour
     public GameObject StaticCell;
     public GameObject DynamicCell;
     public GameObject FinishScreen;
+#if DEBUG
+    public bool ShowDebugWindow = true;
+#endif
+    public TMPro.TextMeshProUGUI NextGoalDisplay;
+    public TMPro.TextMeshProUGUI BestScoreDisplay;
     public TMPro.TextMeshProUGUI[] ScoreDisplay;
-
     [Header("Animation")]
     public float ShrinkStretchTime = 0.25f;
     public float MoveSpeed = 30f;
@@ -24,6 +25,36 @@ public class GridUI : MonoBehaviour
     public float Spacing = 5f;
     public RectOffset Padding;
     public CellStyle[] Styles;
+
+    private int _BestScore;
+    public int BestScore
+    {
+        get => _BestScore;
+        set
+        {
+            if (BestScore <= value)
+            {
+                _BestScore = value;
+                PlayerPrefs.SetInt("BestScore", BestScore);
+                BestScoreDisplay.text = BestScore.ToString();
+            }
+        }
+    }
+
+    private int _NextGoal;
+    public int NextGoal
+    {
+        get => _NextGoal;
+        set
+        {
+            if (NextGoal <= value)
+            {
+                _NextGoal = value;
+                PlayerPrefs.SetInt("NextGoal", NextGoal);
+                NextGoalDisplay.text = $"Your next goal it to reach the {NextGoal} tile!";
+            }
+        }
+    }
 
     private static GridUI Instance;
     private GridLayoutGroup _GridLayout;
@@ -97,6 +128,8 @@ public class GridUI : MonoBehaviour
         _GridLayout.padding = Padding;
         _GridLayout.cellSize = cellSize;
 
+        BestScore = PlayerPrefs.GetInt("BestScore", 0);
+        NextGoal = PlayerPrefs.GetInt("NextGoal", GridHolder.LargestTile * 2);
 
         await Task.Delay(1000);
         for (int i = 0; i < StaticCells.Length; i++)
@@ -118,6 +151,8 @@ public class GridUI : MonoBehaviour
 #if DEBUG
     private void OnGUI()
     {
+        if (!ShowDebugWindow)
+            return;
         float nextY = 10;
         for (int y = 0; y < GridHolder.GridSize.y; y++)
         {
@@ -139,6 +174,9 @@ public class GridUI : MonoBehaviour
 
     private void GridHolder_OnScoreChanged(int oldScore, int newScore)
     {
+        BestScore = newScore;
+        NextGoal = GridHolder.LargestTile * 2;
+
         string score = newScore.ToString();
         for (int i = 0; i < ScoreDisplay.Length; i++)
             ScoreDisplay[i].text = score;

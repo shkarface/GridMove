@@ -22,6 +22,7 @@ public class GridHolder : MonoBehaviour
     public event UnityAction<int, int> OnNewCell;
     public event UnityAction<int, int> OnScoreChanged;
 
+    private int _Score;
     public int Score
     {
         get
@@ -37,8 +38,24 @@ public class GridHolder : MonoBehaviour
             }
         }
     }
-    private int _Score;
 
+    private int _LargestTile;
+    public int LargestTile
+    {
+        get
+        {
+            return Mathf.Max(InitializeValues[0],_LargestTile);
+        }
+        private set
+        {
+            if (LargestTile <= value)
+            {
+                _LargestTile = value;
+            }
+        }
+    }
+
+    private int[,] _Grid;
     public int[,] Grid
     {
         get
@@ -54,7 +71,6 @@ public class GridHolder : MonoBehaviour
             _Grid = value;
         }
     }
-    private int[,] _Grid;
 
     public Vector2Int GridSize = new Vector2Int(4, 4);
     public int[] InitializeValues = new int[] { 2, 4 };
@@ -234,6 +250,7 @@ public class GridHolder : MonoBehaviour
         OnCombineStarted?.Invoke(x1, y1, x2, y2);
         Grid[x1, y1] = Combine(Grid[x1, y1], Grid[x2, y2]);
         Grid[x2, y2] = 0;
+        LargestTile = Grid[x1, y1];
         Score += Grid[x1, y1];
     }
     public int Combine(int n1, int n2)
@@ -258,7 +275,8 @@ public class GridHolder : MonoBehaviour
         } while (Grid[x, y] != 0 && count < Grid.Length);
         if (count < Grid.Length)
         {
-            Grid[x, y] = InitializeValues[Random.Range(0, InitializeValues.Length)];
+            Grid[x, y] = InitializeValues[(count == 1) ? 0 : Random.Range(0, InitializeValues.Length)];
+            LargestTile = Grid[x, y];
             OnNewCell?.Invoke(x, y);
             return true;
         }
