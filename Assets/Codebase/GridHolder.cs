@@ -21,8 +21,7 @@ public class GridHolder : MonoBehaviour
     public event UnityAction<int, int> OnNewCell;
     public event UnityAction<int, int> OnScoreChanged;
 
-    public int MinRandomValue = 1;
-    public int MaxRandomValue = 3;
+    public int[] InitializeValues = new int[] { 2, 4 };
 
     public int Score
     {
@@ -234,9 +233,9 @@ public class GridHolder : MonoBehaviour
     public void Initialize()
     {
         Grid = new int[GridSize.x, GridSize.y];
-        AddRandom(MinRandomValue, MaxRandomValue);
+        AddRandom();
     }
-    public void AddRandom(int min, int max, bool corners = true, bool stop = false)
+    public void AddRandom(bool corners = true, bool stop = false)
     {
         int count = 0;
         int x = 0;
@@ -249,12 +248,12 @@ public class GridHolder : MonoBehaviour
         } while (Grid[x, y] != 0 && count < Grid.Length);
         if (count < Grid.Length)
         {
-            Grid[x, y] = Random.Range(min, max);
+            Grid[x, y] = InitializeValues[Random.Range(0, InitializeValues.Length)];
             OnNewCell?.Invoke(x, y);
         }
         else if (corners && !stop)
         {
-            AddRandom(min, max, false, true);
+            AddRandom(false, true);
         }
         else
         {
@@ -283,7 +282,7 @@ public class GridHolder : MonoBehaviour
         if (IsGameLost())
             OnLost?.Invoke();
         else if (didMove)
-                AddRandom(MinRandomValue, MaxRandomValue);
+            AddRandom();
 
         return didMove;
     }
@@ -323,11 +322,11 @@ public class GridHolderEditor : Editor
         }
         else if (GUILayout.Button("AddRandomCorner"))
         {
-            obj.AddRandom(obj.MinRandomValue, obj.MaxRandomValue);
+            obj.AddRandom();
         }
         else if (GUILayout.Button("AddRandom"))
         {
-            obj.AddRandom(obj.MinRandomValue, obj.MaxRandomValue, false);
+            obj.AddRandom(false);
         }
 
         EditorGUILayout.BeginHorizontal();

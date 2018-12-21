@@ -1265,7 +1265,7 @@ MonoBehaviour:
   - {fileID: 433966977}
   - {fileID: 568287587}
   ShrinkStretchTime: 0.1
-  MoveSpeed: 40
+  MoveSpeed: 20
   Spacing: 10
   Padding:
     m_Left: 15
@@ -1584,6 +1584,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2234e379c25e85943b39763dd88ca635, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  InitializeValues: 0200000004000000
   GridSize: {x: 4, y: 4}
 --- !u!4 &1466576265
 Transform:
