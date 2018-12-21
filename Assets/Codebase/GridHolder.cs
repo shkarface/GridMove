@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Events;
 
 #if UNITY_EDITOR
@@ -23,6 +20,9 @@ public class GridHolder : MonoBehaviour
     public event UnityAction<int, int, int, int> OnMoveStarted;
     public event UnityAction<int, int> OnNewCell;
     public event UnityAction<int, int> OnScoreChanged;
+
+    public int MinRandomValue = 1;
+    public int MaxRandomValue = 3;
 
     public int Score
     {
@@ -64,7 +64,7 @@ public class GridHolder : MonoBehaviour
     {
         GridSize = new Vector2Int(Mathf.Max(2, GridSize.x), Mathf.Max(2, GridSize.y));
     }
-    protected bool MoveDown(bool justCheck = false)
+    protected bool MoveDown()
     {
         bool didMove = false;
         bool didCombineAny = false;
@@ -81,7 +81,6 @@ public class GridHolder : MonoBehaviour
                     {
                         if (CanCombine(Grid[x, y], Grid[x, j]))
                         {
-                            if (justCheck) return true;
                             Combine(x, y, x, j);
                             Grid[x, j] = 0;
                             didCombineAny = true;
@@ -91,7 +90,6 @@ public class GridHolder : MonoBehaviour
                     }
                     else
                     {
-                        if (justCheck) return true;
                         OnMoveStarted?.Invoke(x, y, x, j);
                         Grid[x, y] = Grid[x, j];
                         Grid[x, j] = 0;
@@ -102,7 +100,7 @@ public class GridHolder : MonoBehaviour
         }
         return didMove || didCombineAny;
     }
-    protected bool MoveUp(bool justCheck = false)
+    protected bool MoveUp()
     {
         bool didMove = false;
         bool didCombineAny = false;
@@ -120,7 +118,6 @@ public class GridHolder : MonoBehaviour
                     {
                         if (CanCombine(Grid[x, y], Grid[x, j]))
                         {
-                            if (justCheck) return true;
                             Combine(x, y, x, j);
                             didCombineAny = true;
                         }
@@ -129,7 +126,6 @@ public class GridHolder : MonoBehaviour
                     }
                     else
                     {
-                        if (justCheck) return true;
                         OnMoveStarted?.Invoke(x, y, x, j);
                         Grid[x, y] = Grid[x, j];
                         Grid[x, j] = 0;
@@ -140,7 +136,7 @@ public class GridHolder : MonoBehaviour
         }
         return didMove || didCombineAny;
     }
-    protected bool MoveLeft(bool justCheck = false)
+    protected bool MoveLeft()
     {
         bool didMove = false;
         bool didCombineAny = false;
@@ -158,7 +154,6 @@ public class GridHolder : MonoBehaviour
                     {
                         if (CanCombine(Grid[x, y], Grid[j, y]))
                         {
-                            if (justCheck) return true;
                             Combine(x, y, j, y);
                             didCombineAny = true;
                         }
@@ -167,7 +162,6 @@ public class GridHolder : MonoBehaviour
                     }
                     else
                     {
-                        if (justCheck) return true;
                         OnMoveStarted?.Invoke(x, y, j, y);
                         Grid[x, y] = Grid[j, y];
                         Grid[j, y] = 0;
@@ -178,7 +172,7 @@ public class GridHolder : MonoBehaviour
         }
         return didMove || didCombineAny;
     }
-    protected bool MoveRight(bool justCheck = false)
+    protected bool MoveRight()
     {
         bool didMove = false;
         bool didCombineAny = false;
@@ -186,7 +180,6 @@ public class GridHolder : MonoBehaviour
         {
             for (int x = GridSize.x - 1; x > 0; x--)
             {
-
                 for (int j = x - 1; j >= 0; j--)
                 {
                     if (Grid[j, y] == 0)
@@ -196,7 +189,6 @@ public class GridHolder : MonoBehaviour
                     {
                         if (CanCombine(Grid[x, y], Grid[j, y]))
                         {
-                            if (justCheck) return true;
                             Combine(x, y, j, y);
                             Grid[j, y] = 0;
                             didCombineAny = true;
@@ -206,7 +198,6 @@ public class GridHolder : MonoBehaviour
                     }
                     else
                     {
-                        if (justCheck) return true;
                         OnMoveStarted?.Invoke(x, y, j, y);
                         Grid[x, y] = Grid[j, y];
                         Grid[j, y] = 0;
@@ -243,7 +234,7 @@ public class GridHolder : MonoBehaviour
     public void Initialize()
     {
         Grid = new int[GridSize.x, GridSize.y];
-        AddRandom(1, 3);
+        AddRandom(MinRandomValue, MaxRandomValue);
     }
     public void AddRandom(int min, int max, bool corners = true, bool stop = false)
     {
@@ -289,42 +280,32 @@ public class GridHolder : MonoBehaviour
                 didMove = MoveLeft();
                 break;
         }
-
-        if (!IsGameLost())
-            if (didMove)
-                AddRandom(1, 3);
+        if (IsGameLost())
+            OnLost?.Invoke();
+        else if (didMove)
+                AddRandom(MinRandomValue, MaxRandomValue);
 
         return didMove;
-
     }
     public bool IsGameLost()
     {
-        bool didMove = AnyEmptyCells();
-        if (!didMove)
-        {
-            didMove = MoveDown(true);
-            if (!didMove)
-            {
-                didMove = MoveUp(true);
-                if (!didMove)
-                {
-                    didMove = MoveLeft(true);
-                    if (!didMove)
-                        didMove = MoveRight(true);
-                }
-            }
-        }
-        if (!didMove)
-            OnLost?.Invoke();
-        return !didMove;
-    }
-    public bool AnyEmptyCells()
-    {
         for (int x = 0; x < GridSize.x; x++)
             for (int y = 0; y < GridSize.y; y++)
-                if (Grid[x, y] == 0) return true;
-
-        return false;
+            {
+                if (x > 0)
+                    if (Grid[x - 1, y] == Grid[x, y] || Grid[x - 1, y] == 0)
+                        return false;
+                if (x < GridSize.x - 1)
+                    if (Grid[x + 1, y] == Grid[x, y] || Grid[x + 1, y] == 0)
+                        return false;
+                if (y > 0)
+                    if (Grid[x, y - 1] == Grid[x, y] || Grid[x, y - 1] == 0)
+                        return false;
+                if (y < GridSize.y - 1)
+                    if (Grid[x, y + 1] == Grid[x, y] || Grid[x, y + 1] == 0)
+                        return false;
+            }
+        return true;
     }
 }
 
@@ -342,11 +323,11 @@ public class GridHolderEditor : Editor
         }
         else if (GUILayout.Button("AddRandomCorner"))
         {
-            obj.AddRandom(1, 3);
+            obj.AddRandom(obj.MinRandomValue, obj.MaxRandomValue);
         }
         else if (GUILayout.Button("AddRandom"))
         {
-            obj.AddRandom(1, 3, false);
+            obj.AddRandom(obj.MinRandomValue, obj.MaxRandomValue, false);
         }
 
         EditorGUILayout.BeginHorizontal();

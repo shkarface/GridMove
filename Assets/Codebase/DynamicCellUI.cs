@@ -31,8 +31,11 @@ public class DynamicCellUI : MonoBehaviour
         }
         set
         {
-            _Value = value;
-            Text.text = _Value.ToString();
+            if (_Value != value)
+            {
+                _Value = value;
+                Text.text = _Value.ToString();
+            }
         }
     }
     public GridUI.CellStyle Style
@@ -53,9 +56,7 @@ public class DynamicCellUI : MonoBehaviour
 
     private RectTransform _Rect;
     private Image _Image;
-    [System.NonSerialized]
     private int _Value;
-    [System.NonSerialized]
     private GridUI.CellStyle _Style;
 
     public void PasteFrom(DynamicCellUI other)

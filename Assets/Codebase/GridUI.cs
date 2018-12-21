@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -49,16 +50,14 @@ public class GridUI : MonoBehaviour
     private void RefreshUI()
     {
         for (int x = 0; x < GridHolder.GridSize.x; x++)
-        {
             for (int y = 0; y < GridHolder.GridSize.y; y++)
             {
-                DynamicCells[XY(x,y)].Value=GridHolder.Grid[x,y];
+                DynamicCells[XY(x, y)].Value = GridHolder.Grid[x, y];
             }
-        }
     }
 
     private int _AnimationCount;
-    private void Awake()
+    private async void Awake()
     {
         Instance = this;
         _GridLayout = GetComponent<GridLayoutGroup>();
@@ -99,24 +98,22 @@ public class GridUI : MonoBehaviour
         _GridLayout.cellSize = cellSize;
 
 
-        Invoke(() =>
+        await Task.Delay(1000);
+        for (int i = 0; i < StaticCells.Length; i++)
         {
-            for (int i = 0; i < StaticCells.Length; i++)
-            {
-                DynamicCells[i].Rect.SetAsLastSibling();
-                DynamicCells[i].Rect.anchorMin = StaticCells[i].anchorMin;
-                DynamicCells[i].Rect.anchorMax = StaticCells[i].anchorMax;
-                DynamicCells[i].Rect.anchoredPosition = StaticCells[i].anchoredPosition;
+            DynamicCells[i].Rect.SetAsLastSibling();
+            DynamicCells[i].Rect.anchorMin = StaticCells[i].anchorMin;
+            DynamicCells[i].Rect.anchorMax = StaticCells[i].anchorMax;
+            DynamicCells[i].Rect.anchoredPosition = StaticCells[i].anchoredPosition;
 
-                DynamicCells_Animate[i].Rect.SetAsLastSibling();
-                DynamicCells_Animate[i].Rect.anchorMin = StaticCells[i].anchorMin;
-                DynamicCells_Animate[i].Rect.anchorMax = StaticCells[i].anchorMax;
-                DynamicCells_Animate[i].Rect.anchoredPosition = StaticCells[i].anchoredPosition;
-            }
-            _GridLayout.enabled = false;
-        }, 1);
-        Invoke(() => { GridHolder.Initialize(); }, 1f);
-
+            DynamicCells_Animate[i].Rect.SetAsLastSibling();
+            DynamicCells_Animate[i].Rect.anchorMin = StaticCells[i].anchorMin;
+            DynamicCells_Animate[i].Rect.anchorMax = StaticCells[i].anchorMax;
+            DynamicCells_Animate[i].Rect.anchoredPosition = StaticCells[i].anchoredPosition;
+        }
+        _GridLayout.enabled = false;
+        await Task.Delay(1000);
+        GridHolder.Initialize();
     }
 #if DEBUG
     private void OnGUI()
@@ -223,87 +220,7 @@ public class GridUI : MonoBehaviour
         return Styles[Mathf.Min((int)System.Math.Log(n, 2), Styles.Length - 1)];
     }
 
-
-    #region Timed Actions
-    /// <summary>
-    /// Invoke a method after a number of frames has rendered
-    /// </summary>
-    /// <param name="Method"></param>
-    /// <param name="framesToWait"></param>
-    public static void Invoke(UnityAction Method, int framesToWait)
-    {
-        if (Method == null) return;
-        if (framesToWait == 0)
-            Method.Invoke();
-        else
-            Instance.StartCoroutine(Instance.InvokeAfterFrames(Method, framesToWait));
-    }
-    /// <summary>
-    /// Invoke a method after a number of frames has rendered
-    /// </summary>
-    /// <param name="Method"></param>
-    /// <param name="value"></param>
-    /// <param name="framesToWait"></param>
-    public static void Invoke(UnityAction<bool> Method, bool value, int framesToWait)
-    {
-        if (Method == null) return;
-        if (framesToWait == 0)
-            Method.Invoke(value);
-        else
-            Instance.StartCoroutine(Instance.InvokeAfterFrames(Method, value, framesToWait));
-    }
-    /// <summary>
-    /// Invoke a method after a specific time
-    /// </summary>
-    /// <param name="Method"></param>
-    /// <param name="secondsToWait"></param>
-    public static void Invoke(UnityAction Method, float secondsToWait)
-    {
-        if (Method == null) return;
-        if (secondsToWait <= 0f)
-            Method.Invoke();
-        else
-            Instance.StartCoroutine(Instance.InvokeInSeconds(Method, secondsToWait));
-    }
-    /// <summary>
-    /// Invoke a method after a specific time
-    /// </summary>
-    /// <param name="Method"></param>
-    /// <param name="value"></param>
-    /// <param name="secondsToWait"></param>
-    public static void Invoke(UnityAction<bool> Method, bool value, float secondsToWait)
-    {
-        if (Method == null) return;
-        if (secondsToWait <= 0f)
-            Method.Invoke(value);
-        else
-            Instance.StartCoroutine(Instance.InvokeInSeconds(Method, value, secondsToWait));
-    }
-
-    private IEnumerator InvokeAfterFrames(UnityAction Method, int frames)
-    {
-        for (int index = 0; index < frames; index++)
-            yield return new WaitForEndOfFrame();
-        Method?.Invoke();
-    }
-    private IEnumerator InvokeAfterFrames(UnityAction<bool> Method, bool value, int frames)
-    {
-        for (int index = 0; index < frames; index++)
-            yield return new WaitForEndOfFrame();
-        Method?.Invoke(value);
-    }
-    private IEnumerator InvokeInSeconds(UnityAction Method, float secondsToWait)
-    {
-        yield return new WaitForSeconds(secondsToWait);
-        Method?.Invoke();
-    }
-    private IEnumerator InvokeInSeconds(UnityAction<bool> Method, bool value, float secondsToWait)
-    {
-        yield return new WaitForSeconds(secondsToWait);
-        Method?.Invoke(value);
-    }
-    #endregion
-    [System.Serializable]
+    [Serializable]
     public class CellStyle
     {
         public Color BackgroundColor = Color.white;
