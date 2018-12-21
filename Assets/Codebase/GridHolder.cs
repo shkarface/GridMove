@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
+using System.Collections.Generic;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -20,8 +21,6 @@ public class GridHolder : MonoBehaviour
     public event UnityAction<int, int, int, int> OnMoveStarted;
     public event UnityAction<int, int> OnNewCell;
     public event UnityAction<int, int> OnScoreChanged;
-
-    public int[] InitializeValues = new int[] { 2, 4 };
 
     public int Score
     {
@@ -58,6 +57,9 @@ public class GridHolder : MonoBehaviour
     private int[,] _Grid;
 
     public Vector2Int GridSize = new Vector2Int(4, 4);
+    public int[] InitializeValues = new int[] { 2, 4 };
+
+    private List<int> _CombinedList = new List<int>();
 
     protected void OnValidate()
     {
@@ -78,8 +80,10 @@ public class GridHolder : MonoBehaviour
 
                     if (Grid[x, y] != 0)
                     {
-                        if (CanCombine(Grid[x, y], Grid[x, j]))
+                        int index = (y * GridSize.x) + x;
+                        if (CanCombine(Grid[x, y], Grid[x, j]) && !_CombinedList.Contains(index))
                         {
+                            _CombinedList.Add(index);
                             Combine(x, y, x, j);
                             Grid[x, j] = 0;
                             didCombineAny = true;
@@ -115,8 +119,10 @@ public class GridHolder : MonoBehaviour
 
                     if (Grid[x, y] != 0)
                     {
-                        if (CanCombine(Grid[x, y], Grid[x, j]))
+                        int index = (y * GridSize.x) + x;
+                        if (CanCombine(Grid[x, y], Grid[x, j]) && !_CombinedList.Contains(index))
                         {
+                            _CombinedList.Add(index);
                             Combine(x, y, x, j);
                             didCombineAny = true;
                         }
@@ -151,8 +157,10 @@ public class GridHolder : MonoBehaviour
 
                     if (Grid[x, y] != 0)
                     {
-                        if (CanCombine(Grid[x, y], Grid[j, y]))
+                        int index = (y * GridSize.x) + x;
+                        if (CanCombine(Grid[x, y], Grid[j, y]) && !_CombinedList.Contains(index))
                         {
+                            _CombinedList.Add(index);
                             Combine(x, y, j, y);
                             didCombineAny = true;
                         }
@@ -186,8 +194,10 @@ public class GridHolder : MonoBehaviour
 
                     if (Grid[x, y] != 0)
                     {
-                        if (CanCombine(Grid[x, y], Grid[j, y]))
+                        int index = (y * GridSize.x) + x;
+                        if (CanCombine(Grid[x, y], Grid[j, y]) && !_CombinedList.Contains(index))
                         {
+                            _CombinedList.Add(index);
                             Combine(x, y, j, y);
                             Grid[j, y] = 0;
                             didCombineAny = true;
@@ -235,7 +245,7 @@ public class GridHolder : MonoBehaviour
         Grid = new int[GridSize.x, GridSize.y];
         AddRandom();
     }
-    public void AddRandom(bool corners = true, bool stop = false)
+    public bool AddRandom(bool corners = true, bool stop = false)
     {
         int count = 0;
         int x = 0;
@@ -250,20 +260,22 @@ public class GridHolder : MonoBehaviour
         {
             Grid[x, y] = InitializeValues[Random.Range(0, InitializeValues.Length)];
             OnNewCell?.Invoke(x, y);
+            return true;
         }
         else if (corners && !stop)
         {
-            AddRandom(false, true);
+            return AddRandom(false, true);
         }
         else
         {
-            IsGameLost();
+            //IsGameLost();
+            return false;
         }
     }
     public bool Move(Direction direction)
     {
         bool didMove = false;
-
+        _CombinedList.Clear();
         switch (direction)
         {
             case Direction.Down:
@@ -279,12 +291,17 @@ public class GridHolder : MonoBehaviour
                 didMove = MoveLeft();
                 break;
         }
-        if (IsGameLost())
-            OnLost?.Invoke();
-        else if (didMove)
+
+        if (didMove)
             AddRandom();
 
-        return didMove;
+        if (IsGameLost())
+        {
+            OnLost?.Invoke();
+            return false;
+        }
+        else
+            return didMove;
     }
     public bool IsGameLost()
     {
@@ -350,7 +367,8 @@ public class GridHolderEditor : Editor
             obj.Move(Direction.Down);
         EditorGUILayout.Space();
         EditorGUILayout.EndHorizontal();
-
+        EditorGUILayout.Space();
+        EditorGUILayout.Toggle("Is Lost", obj.IsGameLost());
         if (obj.Grid.Length != (obj.GridSize.x * obj.GridSize.y))
             return;
 
