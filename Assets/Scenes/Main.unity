@@ -1368,7 +1368,7 @@ MonoBehaviour:
     TextColor: {r: 0.9764706, g: 0.9647059, b: 0.9490196, a: 1}
   - BackgroundColor: {r: 0.99607843, g: 0.36862746, b: 0.25490198, a: 1}
     TextColor: {r: 0.9764706, g: 0.9647059, b: 0.9490196, a: 1}
-  - BackgroundColor: {r: 0.8962264, g: 0.75671947, b: 0.38470095, a: 1}
+  - BackgroundColor: {r: 0.8980392, g: 0.7742504, b: 0.3843137, a: 1}
     TextColor: {r: 0.8784314, g: 0.8784314, b: 0.8784314, a: 1}
   - BackgroundColor: {r: 0.8584906, g: 0.7816551, b: 0, a: 1}
     TextColor: {r: 0.9764706, g: 0.9647059, b: 0.9490196, a: 1}
